@@ -45,6 +45,7 @@ All the resources for flutter development in one place
 
 ## Other Resources
 * [Widgets Catalogue](https://flutter.dev/docs/development/ui/widgets)
+* [Flutter widget of the week playlist](https://www.youtube.com/playlist?list=PLjxrf2q8roU23XGwz3Km7sQZFTdB996iG)
 * [Container Documentation](https://docs.flutter.io/flutter/widgets/Container-class.html)
 * [Column Documentation](https://docs.flutter.io/flutter/widgets/Column-class.html)
 * [Row Documentation](https://docs.flutter.io/flutter/widgets/Row-class.html)
