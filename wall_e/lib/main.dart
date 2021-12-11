@@ -1,4 +1,8 @@
+import 'dart:typed_data';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart';
 
 void main() {
   runApp(const WallE());
@@ -33,6 +37,10 @@ final urls = [
 class MyGrid extends StatelessWidget {
   const MyGrid({Key? key}) : super(key: key);
 
+  // void myFunction() {
+  //   print('My function running');
+  // }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -51,19 +59,34 @@ class MyGrid extends StatelessWidget {
         ),
         itemCount: 10,
         itemBuilder: (context, index) {
-          return Card(
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Container(
-                height: 100,
-                width: 100,
-                // color: index % 3 == 0 ? Colors.red : Colors.blue,
-                child: Image.network(
-                  urls[index],
+          return GestureDetector(
+            // onTap: myFunction,
+            onTap: () {
+              //print('print anything');
+              //move to another screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ImageScreen(
+                    url: urls[index],
+                  ),
                 ),
-                // Center(
-                //   child: Text('${index + 100}'),
-                // ),
+              );
+            },
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Container(
+                  height: 100,
+                  width: 100,
+                  // color: index % 3 == 0 ? Colors.red : Colors.blue,
+                  child: Image.network(
+                    urls[index],
+                  ),
+                  // Center(
+                  //   child: Text('${index + 100}'),
+                  // ),
+                ),
               ),
             ),
           );
@@ -73,22 +96,169 @@ class MyGrid extends StatelessWidget {
   }
 }
 
-class ColorfulContainer extends StatelessWidget {
-  const ColorfulContainer({Key? key, this.color}) : super(key: key);
+// class TapableContainer extends StatefulWidget {
+//   TapableContainer({Key? key}) : super(key: key);
 
-  final Color? color;
+//   @override
+//   State<TapableContainer> createState() => _TapableContainerState();
+// }
+
+// class _TapableContainerState extends State<TapableContainer> {
+//   Color color = Colors.red;
+
+//   void changeColor() {
+//     // print(color);
+//     if (color == Colors.red)
+//       color = Colors.green;
+//     else
+//       color = Colors.red;
+//     setState(() {});
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Center(
+//       child: GestureDetector(
+//         onTap: changeColor,
+//         child: Container(
+//           height: 150,
+//           width: 150,
+//           color: color,
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+class ImageScreen extends StatefulWidget {
+  ImageScreen({Key? key, this.url}) : super(key: key);
+
+  final String? url;
+
+  @override
+  State<ImageScreen> createState() => _ImageScreenState();
+}
+
+class _ImageScreenState extends State<ImageScreen> {
+  bool isDownloading = false;
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: 10,
-      itemBuilder: (context, index) {
-        return Container(
-          height: 100,
-          width: 100,
-          color: index % 2 == 0 ? Colors.red : Colors.blue,
-        );
-      },
+    return Scaffold(
+      body: Stack(
+        children: [
+          Container(
+            height: double.infinity,
+            width: double.infinity,
+            child: Image.network(
+              widget.url!,
+              fit: BoxFit.fill,
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Container(
+              height: 60,
+              width: double.infinity,
+              color: Colors.black.withOpacity(0.6),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (!isDownloading)
+                    IconButton(
+                      onPressed: () async {
+                        setState(() {
+                          isDownloading = true;
+                        });
+                        final response = await Dio().get(widget.url!,
+                            options: Options(responseType: ResponseType.bytes));
+                        final result = await ImageGallerySaver.saveImage(
+                            Uint8List.fromList(response.data),
+                            quality: 100,
+                            name: 'Myimagename23455');
+                        if (result['isSuccess'] == true) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Image saved successfuly'),
+                            ),
+                          );
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content:
+                                  Text('Image not saved, Somwthing went wrong'),
+                            ),
+                          );
+                        }
+                        setState(() {
+                          isDownloading = false;
+                        });
+                      },
+                      icon: Icon(
+                        Icons.download,
+                        color: Colors.white,
+                      ),
+                    ),
+                  if (isDownloading) CircularProgressIndicator(),
+                  IconButton(
+                    onPressed: () {
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (context) => Container(
+                          // height: 160,
+                          color: Colors.white,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                leading: Icon(Icons.wallpaper),
+                                title: Text("Set as home screen wallpaper"),
+                              ),
+                              ListTile(
+                                leading: Icon(Icons.lock),
+                                title: Text("Set as lock screen wallpaper"),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                    icon: Icon(
+                      Icons.wallpaper,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        ],
+      ),
+
+      // Center(
+      //   child: Text('Image screen'),
+      // ),
+      // body: TapableContainer(),
     );
   }
 }
+
+// class ColorfulContainer extends StatelessWidget {
+//   const ColorfulContainer({Key? key, this.color}) : super(key: key);
+
+//   final Color? color;
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return ListView.builder(
+//       itemCount: 10,
+//       itemBuilder: (context, index) {
+//         return Container(
+//           height: 100,
+//           width: 100,
+//           color: index % 2 == 0 ? Colors.red : Colors.blue,
+//         );
+//       },
+//     );
+//   }
+// }
